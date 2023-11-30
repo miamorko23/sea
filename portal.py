@@ -12,6 +12,7 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import requests
 import subprocess
 # 50f02ab2192c5a6e7e8ddcce9f82007f
+# https://rb.gy/d7pbc5
 import sys
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QCursor, QPixmap, QIcon
