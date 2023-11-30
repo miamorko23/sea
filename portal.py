@@ -32,7 +32,7 @@ is_connected = check_wifi_connection(wifi_name)
 if is_connected:
     pass
 else:
-    print('~N~')
+    print('if NOT connected ~bypass')
     # sys.exit(0)
 
 
@@ -82,12 +82,15 @@ def sea():
         cnt = 0
         status = ''
         hp = 0
+
         while True:
             ret, frame = cap.read()
             frame = imutils.resize(frame, width=523, height=323)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             subjects = detect(gray, 0)
 
+            print('~!A')
+            print(len(subjects))
             for subject in subjects:
                 shape = predict(gray, subject)
                 shape = face_utils.shape_to_np(shape)
@@ -159,7 +162,7 @@ def sea():
         cv2.destroyAllWindows()
         cap.release()
 
-    except Exeption as pt:
+    except Exception as pt:
         print(pt)
         sys.exit(0)
 
@@ -167,103 +170,102 @@ def sea():
 class LoginWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Realm")
+        # Set window icon
+        self.setWindowIcon(QIcon('hat.ico'))
+        self.setWindowTitle("Sign In")
         self.setFixedWidth(400)
         self.setFixedHeight(600)
         self.setStyleSheet(
-            "background-color: #222; color: #fff;"
+            "background-color: #1c1c1c; color: #fff;"
             "font-family: 'Segoe UI', sans-serif;"
         )
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setAlignment(Qt.AlignTop)
 
-        # Heading
-        heading_label = QtWidgets.QLabel("Sign In")
-        heading_label.setStyleSheet(
-            "font-size: 30px; font-weight: bold; margin: 20px 0;"
-        )
-        layout.addWidget(heading_label, alignment=Qt.AlignCenter)
+        # Logo
+        logo_label = QtWidgets.QLabel(self)
+        logo_pixmap = QPixmap("rudder.png")
+        logo_label.setPixmap(logo_pixmap.scaledToWidth(200))
+        layout.addWidget(logo_label, alignment=Qt.AlignCenter)
 
-        # Username Field
-        self.user_field = QtWidgets.QLineEdit()
-        self.user_field.setPlaceholderText("Username")
-        self.user_field.setStyleSheet(
-            "border: none; border-bottom: 2px solid #888; padding: 10px;"
-            "background-color: transparent; color: #fff; font-size: 16px;"
+        # Secret Key Field
+        self.key_field = QtWidgets.QLineEdit()
+        self.key_field.setPlaceholderText("Secret Key")
+        self.key_field.setStyleSheet(
+            "border: 2px solid #888; padding: 10px;"
+            "background-color: #fff; color: #333; font-size: 16px;"
+            "border-radius: 5px;"
         )
-        layout.addWidget(self.user_field)
-
-        # Password Field
-        self.pass_field = QtWidgets.QLineEdit()
-        self.pass_field.setPlaceholderText("Password")
-        self.pass_field.setEchoMode(QtWidgets.QLineEdit.Password)
-        self.pass_field.setStyleSheet(
-            "border: none; border-bottom: 2px solid #888; padding: 10px;"
-            "background-color: transparent; color: #fff; font-size: 16px;"
-        )
-        layout.addWidget(self.pass_field)
+        layout.addWidget(self.key_field)
 
         # Login Button
-        self.login_btn = QtWidgets.QPushButton("Log In")
+        self.login_btn = QtWidgets.QPushButton("Sign In")
         self.login_btn.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
         self.login_btn.setStyleSheet(
-            "background-color: #00a8ff; color: #fff; font-size: 16px;"
-            "padding: 10px 30px; border-radius: 5px; margin-top: 20px;"
+            "background-color: #1c1c1c; color: #fff; font-size: 16px;"
+            "padding: 10px 30px; border: 2px solid #fff; border-radius: 5px; margin-top: 20px;"
         )
         self.login_btn.clicked.connect(self.login)
         layout.addWidget(self.login_btn, alignment=Qt.AlignCenter)
 
-        # Image
-        image_label = QtWidgets.QLabel(self)
-        image_pixmap = QPixmap("chest.png")
-        image_label.setPixmap(image_pixmap.scaledToWidth(200))
-        layout.addWidget(image_label, alignment=Qt.AlignCenter)
-
+        # Message Area
+        self.message_label = QtWidgets.QLabel("")
+        self.message_label.setStyleSheet(
+            "color: red; font-size: 16px; margin-top: 20px;"
+        )
+        layout.addWidget(self.message_label, alignment=Qt.AlignCenter)
         layout.addStretch()  # Add flexible space at the bottom
 
     def login(self):
-        username = self.user_field.text()
-        password = self.pass_field.text()
+        try:
 
-        # Connect to your Post_SQL database
-        conn = psycopg2.connect(
-            dbname="miamorko23",
-            user="miamorko23_user",
-            password="jsUL6Rbb6Ce1ZTopxZUtHO2hylVQIFA5",
-            host="dpg-ckn0mf91rp3c73epu630-a.singapore-postgres.render.com",
-            port="5432"
-        )
+            # Fetch the secret key from the user input
+            secret_key = self.key_field.text()
 
-        # Create a cursor object
-        cur = conn.cursor()
-
-        # Execute a query to check the username and password
-        cur.execute("SELECT * FROM auth_user WHERE username = %s OR password = %s", (username, password))
-
-        # If a match is found in the database
-        if cur.fetchone() is not None:
-            self.login_btn.setStyleSheet(
-                "background-color: green; color: #fff; font-size: 16px;"
-                "padding: 10px 30px; border-radius: 5px; margin-top: 20px;"
+            # Connect to your Post_SQL database
+            conn = psycopg2.connect(
+                dbname="miamorko23",
+                user="miamorko23_user",
+                password="jsUL6Rbb6Ce1ZTopxZUtHO2hylVQIFA5",
+                host="dpg-ckn0mf91rp3c73epu630-a.singapore-postgres.render.com",
+                port="5432"
             )
-            self.clear_fields()
-            self.close()
-            sea()
-        else:
-            self.login_btn.setStyleSheet(
-                "background-color: red; color: #fff; font-size: 16px;"
-                "padding: 10px 30px; border-radius: 5px; margin-top: 20px;"
-            )
-            self.clear_fields()
 
-        # Close the cursor and connection
-        cur.close()
-        conn.close()
+            # Create a cursor object
+            cur = conn.cursor()
+            # Execute a query to fetch the user
+            cur.execute("SELECT secret_key FROM main_userwithkey WHERE secret_key = %s", (secret_key,))
+            # Fetch the result
+            user = cur.fetchone()
+
+            # If a match is found in the database
+            if user is not None:
+                self.login_btn.setStyleSheet(
+                    "background-color: green; color: #fff; font-size: 16px;"
+                    "padding: 10px 30px; border-radius: 5px; margin-top: 20px;"
+                )
+                self.clear_fields()
+                self.close()
+                cur.close()
+                conn.close()
+                sea()
+            else:
+                self.login_btn.setStyleSheet(
+                    "background-color: red; color: #fff; font-size: 16px;"
+                    "padding: 10px 30px; border-radius: 5px; margin-top: 20px;"
+                )
+                self.clear_fields()
+
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
+
+        except Exception as r:
+            print(r)
 
     def clear_fields(self):
-        self.user_field.clear()
-        self.pass_field.clear()
+        self.key_field.clear()
 
 
 if __name__ == "__main__":
