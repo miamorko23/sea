@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 import psycopg2
 import subprocess
 
-# ~
+import socket
 import csv
 from datetime import datetime
 import cv2
@@ -38,6 +38,17 @@ if is_connected:
 else:
     print('if NOT connected ~bypass')
     # sys.exit(0)
+
+
+def is_linked():
+    try:
+        host = socket.gethostbyname("www.google.com")
+        socket.create_connection((host, 80), 2)
+        return True
+    except Exception as m:
+        print(m)
+        pass
+    return False
 
 
 # Record a drowsiness event locally
@@ -210,25 +221,30 @@ def sea():
             cv2.imshow("Frame", frame)
             key = cv2.waitKey(1) & 0xFF
             if key == ord('z'):
-                # After DRIVING:
-                if upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
-                    # PRINT
-                    with open('local_drowsiness_events.csv', 'r') as file:
-                        for line in file:
-                            print(line, end='')
-                    print("First_Print^________________________________")
-                    # ERASE
-                    with open('local_drowsiness_events.csv', 'w') as file:
-                        file.truncate()
-                    print("Erase^______________________________________")
-                    # PRINT
-                    with open('local_drowsiness_events.csv', 'r') as file:
-                        for line in file:
-                            print(line, end='')
-                    print("Second_Print^_______________________________")
+                # DISCONNECT the ESP8266
+                if is_linked():
+                    # After DRIVING:
+                    if upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
+                        # PRINT
+                        with open('local_drowsiness_events.csv', 'r') as file:
+                            for line in file:
+                                print(line, end='')
+                        print("First_Print^________________________________")
+                        # ERASE
+                        with open('local_drowsiness_events.csv', 'w') as file:
+                            file.truncate()
+                        print("Erase^______________________________________")
+                        # PRINT
+                        with open('local_drowsiness_events.csv', 'r') as file:
+                            for line in file:
+                                print(line, end='')
+                        print("Second_Print^_______________________________")
+                    else:
+                        print('NOT ok kayo')
+                    break
                 else:
-                    print('NOT ok kayo')
-                break
+                    print('Internet connection is required.')
+
         cap.release()
         cv2.destroyAllWindows()
     except Exception as e:
