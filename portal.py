@@ -5,8 +5,7 @@ from PyQt5.QtGui import QCursor, QPixmap, QIcon
 from PyQt5.QtCore import Qt
 import psycopg2
 import subprocess
-
-import socket
+import time
 import csv
 from datetime import datetime
 import cv2
@@ -40,15 +39,12 @@ else:
     # sys.exit(0)
 
 
-def is_linked():
-    try:
-        host = socket.gethostbyname("www.google.com")
-        socket.create_connection((host, 80), 2)
-        return True
-    except Exception as m:
-        print(m)
-        pass
-    return False
+def disconnect_wifi():
+    subprocess.call('netsh wlan disconnect', shell=True)
+
+
+def connect_wifi(network):
+    subprocess.call(f'netsh wlan connect name="{network}"', shell=True)
 
 
 # Record a drowsiness event locally
@@ -103,6 +99,10 @@ def eye_aspect_ratio(eye):
 # Main function for the drowsiness detection system
 def sea():
     try:
+        # Disconnect from the current Wi-Fi
+        disconnect_wifi()
+        # Connect to a previously connected Wi-Fi
+        connect_wifi('SeaMern')
         # Set the ESP8266 IP address
         esp8266_ip = "192.168.4.1"
 
@@ -176,7 +176,7 @@ def sea():
                             mixer.music.load("final.mp3")
                             mixer.music.play()
                             status = 'Hercules'
-                            # requests.get(f"http://{esp8266_ip}/ledon")
+                            requests.get(f"http://{esp8266_ip}/ledon")
                             record_drowsiness_event_local('B')
                         if not mixer.music.get_busy():
                             mixer.music.play()
@@ -205,7 +205,7 @@ def sea():
                             mixer.music.load("partial.mp3")
                             hp = 0
                             status = ''
-                            # requests.get(f"http://{esp8266_ip}/ledoff")
+                            requests.get(f"http://{esp8266_ip}/ledoff")
                             record_drowsiness_event_local('BD')
 
                     flag = 0
@@ -221,29 +221,30 @@ def sea():
             cv2.imshow("Frame", frame)
             key = cv2.waitKey(1) & 0xFF
             if key == ord('z'):
-                # DISCONNECT the ESP8266
-                if is_linked():
-                    # After DRIVING:
-                    if upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
-                        # PRINT
-                        with open('local_drowsiness_events.csv', 'r') as file:
-                            for line in file:
-                                print(line, end='')
-                        print("First_Print^________________________________")
-                        # ERASE
-                        with open('local_drowsiness_events.csv', 'w') as file:
-                            file.truncate()
-                        print("Erase^______________________________________")
-                        # PRINT
-                        with open('local_drowsiness_events.csv', 'r') as file:
-                            for line in file:
-                                print(line, end='')
-                        print("Second_Print^_______________________________")
-                    else:
-                        print('NOT ok kayo')
-                    break
+                # Disconnect from the current Wi-Fi
+                disconnect_wifi()
+                # Connect to a previously connected Wi-Fi
+                connect_wifi('*******P')
+
+                # After DRIVING:
+                while upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
+                    # PRINT
+                    with open('local_drowsiness_events.csv', 'r') as file:
+                        for line in file:
+                            print(line, end='')
+                    print("First_Print^________________________________")
+                    # ERASE
+                    with open('local_drowsiness_events.csv', 'w') as file:
+                        file.truncate()
+                    print("Erase^______________________________________")
+                    # PRINT
+                    with open('local_drowsiness_events.csv', 'r') as file:
+                        for line in file:
+                            print(line, end='')
+                    print("Second_Print^_______________________________")
                 else:
-                    print('Internet connection is required.')
+                    print('NOT ok kayo')
+                break
 
         cap.release()
         cv2.destroyAllWindows()
@@ -362,3 +363,5 @@ if __name__ == "__main__":
     window = LoginWindow()
     window.show()
     sys.exit(app.exec())
+
+# c52b429a83a2ae595c0ae492eb88f001
