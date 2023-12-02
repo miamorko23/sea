@@ -166,7 +166,6 @@ def sea():
                             mixer.music.play()
                             status = 'Hercules'
                             # requests.get(f"http://{esp8266_ip}/ledon")
-                            print('B: Brake Activation')  # B~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                             record_drowsiness_event_local('B')
                         if not mixer.music.get_busy():
                             mixer.music.play()
