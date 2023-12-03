@@ -1,12 +1,11 @@
-# https://rb.gy/d7pbc5
 import sys
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QCursor, QPixmap, QIcon
 from PyQt5.QtCore import Qt
 import psycopg2
 import subprocess
-import time
 import csv
+import time
 from datetime import datetime
 import cv2
 import dlib
@@ -18,6 +17,14 @@ from pygame import mixer
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
+
+def disconnect_wifi():
+    subprocess.call('netsh wlan disconnect', shell=True)
+
+
+def connect_wifi(network):
+    subprocess.call(f'netsh wlan connect name="{network}"', shell=True)
 
 
 def check_wifi_connection(ssid):
@@ -32,19 +39,21 @@ def check_wifi_connection(ssid):
 secret_key = ''
 wifi_name = 'SeaMern'
 is_connected = check_wifi_connection(wifi_name)
+print('sleeping')
 if is_connected:
+    # Disconnect from the current Wi-Fi
+    disconnect_wifi()
+    # Connect to a previously connected Wi-Fi
+    connect_wifi('********')  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~| Don't connect if there is no Wi-Fi
+    air = check_wifi_connection('********')
+    while air:
+        print(air)
+        time.sleep(2)
+        connect_wifi('********')
+        print('~')
     pass
 else:
-    print('if NOT connected ~bypass')
-    # sys.exit(0)
-
-
-def disconnect_wifi():
-    subprocess.call('netsh wlan disconnect', shell=True)
-
-
-def connect_wifi(network):
-    subprocess.call(f'netsh wlan connect name="{network}"', shell=True)
+    sys.exit(0)
 
 
 # Record a drowsiness event locally
@@ -65,9 +74,7 @@ def upload_drowsiness_events_to_db(user_id):
             host="dpg-ckn0mf91rp3c73epu630-a.singapore-postgres.render.com",
             port="5432"
         )
-
         cur = conn.cursor()
-
         # Read the local drowsiness events
         with open('local_drowsiness_events.csv', mode='r') as file:
             reader = csv.reader(file)
@@ -77,9 +84,7 @@ def upload_drowsiness_events_to_db(user_id):
                             INSERT INTO main_drowsinessevent (user_id, time, status)
                             SELECT user_ptr_id, %s, %s FROM main_userwithkey WHERE secret_key = %s
                             """, (event_time, status, secret_key))
-
         conn.commit()
-
         cur.close()
         conn.close()
         return 'ok kayo'
@@ -99,10 +104,6 @@ def eye_aspect_ratio(eye):
 # Main function for the drowsiness detection system
 def sea():
     try:
-        # Disconnect from the current Wi-Fi
-        disconnect_wifi()
-        # Connect to a previously connected Wi-Fi
-        connect_wifi('SeaMern')
         # Set the ESP8266 IP address
         esp8266_ip = "192.168.4.1"
 
@@ -219,32 +220,71 @@ def sea():
                     volume.SetMasterVolumeLevel(current_volume_db + 20.4, None)
 
             cv2.imshow("Frame", frame)
+
             key = cv2.waitKey(1) & 0xFF
             if key == ord('z'):
                 # Disconnect from the current Wi-Fi
                 disconnect_wifi()
                 # Connect to a previously connected Wi-Fi
-                connect_wifi('*******P')
-
-                # After DRIVING:
-                while upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
-                    # PRINT
-                    with open('local_drowsiness_events.csv', 'r') as file:
-                        for line in file:
-                            print(line, end='')
-                    print("First_Print^________________________________")
-                    # ERASE
-                    with open('local_drowsiness_events.csv', 'w') as file:
-                        file.truncate()
-                    print("Erase^______________________________________")
-                    # PRINT
-                    with open('local_drowsiness_events.csv', 'r') as file:
-                        for line in file:
-                            print(line, end='')
-                    print("Second_Print^_______________________________")
+                connect_wifi('********')
+                # Check if connected to the specified Wi-Fi
+                if not check_wifi_connection('********'):
+                    print('Wi-Fi connection failed. Please connect to the designated Wi-Fi.')
                 else:
-                    print('NOT ok kayo')
-                break
+                    # After DRIVING:
+                    max_retries = 5
+                    attempts = 0
+                    while attempts < max_retries:
+                        upload_response = upload_drowsiness_events_to_db(secret_key)
+                        if upload_response == 'ok kayo':
+                            # PRINT
+                            with open('local_drowsiness_events.csv', 'r') as file:
+                                for line in file:
+                                    print(line, end='')
+                            print("First_Print^________________________________")
+                            # ERASE
+                            with open('local_drowsiness_events.csv', 'w') as file:
+                                file.truncate()
+                            print("Erase^______________________________________")
+                            # PRINT
+                            with open('local_drowsiness_events.csv', 'r') as file:
+                                for line in file:
+                                    print(line, end='')
+                            print("Second_Print^_______________________________")
+                            break  # Exit the loop if upload is successful
+                        else:
+                            attempts += 1
+                            print(f'Upload failed. Attempt {attempts} of {max_retries}. Retrying...')
+                            time.sleep(3)  # Wait for 3 seconds before trying again
+                    if attempts == max_retries:
+                        print('Maximum upload attempts reached. Please try again later.')
+
+            # key = cv2.waitKey(1) & 0xFF
+            # if key == ord('z'):
+            #     # Disconnect from the current Wi-Fi
+            #     disconnect_wifi()
+            #     # Connect to a previously connected Wi-Fi
+            #     connect_wifi('*******P')
+            #
+            #     # After DRIVING:
+            #     while upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
+            #         # PRINT
+            #         with open('local_drowsiness_events.csv', 'r') as file:
+            #             for line in file:
+            #                 print(line, end='')
+            #         print("First_Print^________________________________")
+            #         # ERASE
+            #         with open('local_drowsiness_events.csv', 'w') as file:
+            #             file.truncate()
+            #         print("Erase^______________________________________")
+            #         # PRINT
+            #         with open('local_drowsiness_events.csv', 'r') as file:
+            #             for line in file:
+            #                 print(line, end='')
+            #         print("Second_Print^_______________________________")
+            #     else:
+            #         print('NOT ok kayo')
+            #     break
 
         cap.release()
         cv2.destroyAllWindows()
