@@ -24,7 +24,21 @@ def disconnect_wifi():
 
 
 def connect_wifi(network):
-    subprocess.call(f'netsh wlan connect name="{network}"', shell=True)
+    # Attempt to connect to the Wi-Fi network
+    result = subprocess.call(f'netsh wlan connect name="{network}"', shell=True)
+    # Return False if the command was successful (exit status 0), True otherwise
+    return result != 0
+
+
+def refresh_and_connect_wifi(network):
+    # Disconnect from the current Wi-Fi network
+    subprocess.call('netsh wlan disconnect', shell=True)
+    # Scan for new Wi-Fi networks
+    subprocess.call('netsh wlan show networks', shell=True)  # HERE~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Attempt to connect to the specified Wi-Fi network
+    result = subprocess.call(f'netsh wlan connect name="{network}"', shell=True)
+    # Return False if the command was successful (exit status 0), True otherwise
+    return result != 0
 
 
 def check_wifi_connection(ssid):
@@ -39,18 +53,21 @@ def check_wifi_connection(ssid):
 secret_key = ''
 wifi_name = 'SeaMern'
 is_connected = check_wifi_connection(wifi_name)
-print('sleeping')
 if is_connected:
-    # Disconnect from the current Wi-Fi
-    disconnect_wifi()
+    disconnect_wifi()  # Disconnect from the current Wi-Fi, in this case the SeaMern
+
     # Connect to a previously connected Wi-Fi
-    connect_wifi('********')  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~| Don't connect if there is no Wi-Fi
-    air = check_wifi_connection('********')
-    while air:
-        print(air)
-        time.sleep(2)
-        connect_wifi('********')
-        print('~')
+    connection_result = refresh_and_connect_wifi('*******P')  # True if not connected
+    while connection_result:
+        connection_result = refresh_and_connect_wifi('*******P')
+        print('Connecting to *******P...')
+        time.sleep(5)
+
+    # Second layer in making sure everything is connected
+    cloud = check_wifi_connection('********P')
+    while cloud:
+        air = connect_wifi('********P')
+        time.sleep(5)
     pass
 else:
     sys.exit(0)
@@ -228,7 +245,8 @@ def sea():
                 # Connect to a previously connected Wi-Fi
                 connect_wifi('********')
                 # Check if connected to the specified Wi-Fi
-                if not check_wifi_connection('********'):
+                cc = check_wifi_connection('********')
+                if not cc:
                     print('Wi-Fi connection failed. Please connect to the designated Wi-Fi.')
                 else:
                     # After DRIVING:
