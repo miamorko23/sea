@@ -34,7 +34,7 @@ def refresh_and_connect_wifi(network):
     # Disconnect from the current Wi-Fi network
     subprocess.call('netsh wlan disconnect', shell=True)
     # Scan for new Wi-Fi networks
-    subprocess.call('netsh wlan show networks', shell=True)  # HERE~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    subprocess.call('netsh wlan show networks', shell=True)
     # Attempt to connect to the specified Wi-Fi network
     result = subprocess.call(f'netsh wlan connect name="{network}"', shell=True)
     # Return False if the command was successful (exit status 0), True otherwise
@@ -51,26 +51,32 @@ def check_wifi_connection(ssid):
 
 
 secret_key = ''
-wifi_name = 'SeaMern'
-is_connected = check_wifi_connection(wifi_name)
-if is_connected:
-    disconnect_wifi()  # Disconnect from the current Wi-Fi, in this case the SeaMern
+brake_activator = 'SeaMern'
 
-    # Connect to a previously connected Wi-Fi
-    connection_result = refresh_and_connect_wifi('*******P')  # True if not connected
-    while connection_result:
-        connection_result = refresh_and_connect_wifi('*******P')
-        print('Connecting to *******P...')
-        time.sleep(5)
+# Connect to the Brake Activator
+connection_result = refresh_and_connect_wifi(brake_activator)  # True if not connected
+while connection_result:
+    connection_result = refresh_and_connect_wifi(brake_activator)
+    print(f'Connecting to {brake_activator}...')
+    time.sleep(5)
 
-    # Second layer in making sure everything is connected
-    cloud = check_wifi_connection('********P')
-    while cloud:
-        air = connect_wifi('********P')
-        time.sleep(5)
-    pass
-else:
-    sys.exit(0)
+
+disconnect_wifi()  # Disconnect from the current Wi-Fi, in this case the SeaMern
+
+# Transitioning to the INTERNET ACCESS
+internet_wifi = '********'
+# Connect to the internet_wifi
+connection_result = refresh_and_connect_wifi(internet_wifi)  # True if not connected
+while connection_result:
+    connection_result = refresh_and_connect_wifi(internet_wifi)
+    print(f'Connecting to {internet_wifi}...')
+    time.sleep(5)
+
+# Second layer in making sure the machine is connected to the Wi-Fi providing an internet connection
+cloud = check_wifi_connection(internet_wifi)
+while cloud:
+    cloud = connect_wifi(internet_wifi)
+    time.sleep(3)
 
 
 # Record a drowsiness event locally
@@ -238,16 +244,51 @@ def sea():
 
             cv2.imshow("Frame", frame)
 
+            # key = cv2.waitKey(1) & 0xFF
+            # if key == ord('z'):
+            #     # Disconnect from the current Wi-Fi
+            #     disconnect_wifi()
+            #     # Connect to a previously connected Wi-Fi
+            #     connect_wifi('*******P')
+            #
+            #     # After DRIVING:
+            #     while upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
+            #         # PRINT
+            #         with open('local_drowsiness_events.csv', 'r') as file:
+            #             for line in file:
+            #                 print(line, end='')
+            #         print("First_Print^________________________________")
+            #         # ERASE
+            #         with open('local_drowsiness_events.csv', 'w') as file:
+            #             file.truncate()
+            #         print("Erase^______________________________________")
+            #         # PRINT
+            #         with open('local_drowsiness_events.csv', 'r') as file:
+            #             for line in file:
+            #                 print(line, end='')
+            #         print("Second_Print^_______________________________")
+            #     else:
+            #         print('NOT ok kayo')
+            #     break
+
             key = cv2.waitKey(1) & 0xFF
             if key == ord('z'):
-                # Disconnect from the current Wi-Fi
-                disconnect_wifi()
-                # Connect to a previously connected Wi-Fi
-                connect_wifi('********')
-                # Check if connected to the specified Wi-Fi
-                cc = check_wifi_connection('********')
-                if not cc:
-                    print('Wi-Fi connection failed. Please connect to the designated Wi-Fi.')
+
+                # Transitioning to the INTERNET ACCESS
+                disconnect_wifi()  # Disconnect from the current Wi-Fi, in this case the SeaMern
+                # Connect to the internet_wifi
+                connection_result_2 = refresh_and_connect_wifi(internet_wifi)  # True if not connected
+                while connection_result_2:
+                    connection_result_2 = refresh_and_connect_wifi(internet_wifi)
+                    print(f'Connecting to {internet_wifi}...')
+                    time.sleep(5)
+
+                # Second layer in making sure the machine is connected to the Wi-Fi providing an internet connection
+                cloud_2 = check_wifi_connection(internet_wifi)
+                while cloud_2:
+                    cloud_2 = connect_wifi(internet_wifi)
+                    time.sleep(3)
+
                 else:
                     # After DRIVING:
                     max_retries = 5
@@ -276,33 +317,7 @@ def sea():
                             time.sleep(3)  # Wait for 3 seconds before trying again
                     if attempts == max_retries:
                         print('Maximum upload attempts reached. Please try again later.')
-
-            # key = cv2.waitKey(1) & 0xFF
-            # if key == ord('z'):
-            #     # Disconnect from the current Wi-Fi
-            #     disconnect_wifi()
-            #     # Connect to a previously connected Wi-Fi
-            #     connect_wifi('*******P')
-            #
-            #     # After DRIVING:
-            #     while upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
-            #         # PRINT
-            #         with open('local_drowsiness_events.csv', 'r') as file:
-            #             for line in file:
-            #                 print(line, end='')
-            #         print("First_Print^________________________________")
-            #         # ERASE
-            #         with open('local_drowsiness_events.csv', 'w') as file:
-            #             file.truncate()
-            #         print("Erase^______________________________________")
-            #         # PRINT
-            #         with open('local_drowsiness_events.csv', 'r') as file:
-            #             for line in file:
-            #                 print(line, end='')
-            #         print("Second_Print^_______________________________")
-            #     else:
-            #         print('NOT ok kayo')
-            #     break
+                break
 
         cap.release()
         cv2.destroyAllWindows()
