@@ -127,6 +127,13 @@ def eye_aspect_ratio(eye):
 # Main function for the drowsiness detection system
 def sea():
     try:
+        disconnect_wifi()  # Disconnect from the current Wi-Fi, in this case the internet access
+        conn_res = refresh_and_connect_wifi(brake_activator)  # True if not connected
+        while conn_res:
+            conn_res = refresh_and_connect_wifi(brake_activator)
+            print(f'Connecting to {brake_activator}...')
+            time.sleep(5)
+
         # Set the ESP8266 IP address
         esp8266_ip = "192.168.4.1"
 
@@ -243,33 +250,6 @@ def sea():
                     volume.SetMasterVolumeLevel(current_volume_db + 20.4, None)
 
             cv2.imshow("Frame", frame)
-
-            # key = cv2.waitKey(1) & 0xFF
-            # if key == ord('z'):
-            #     # Disconnect from the current Wi-Fi
-            #     disconnect_wifi()
-            #     # Connect to a previously connected Wi-Fi
-            #     connect_wifi('*******P')
-            #
-            #     # After DRIVING:
-            #     while upload_drowsiness_events_to_db(secret_key) == 'ok kayo':
-            #         # PRINT
-            #         with open('local_drowsiness_events.csv', 'r') as file:
-            #             for line in file:
-            #                 print(line, end='')
-            #         print("First_Print^________________________________")
-            #         # ERASE
-            #         with open('local_drowsiness_events.csv', 'w') as file:
-            #             file.truncate()
-            #         print("Erase^______________________________________")
-            #         # PRINT
-            #         with open('local_drowsiness_events.csv', 'r') as file:
-            #             for line in file:
-            #                 print(line, end='')
-            #         print("Second_Print^_______________________________")
-            #     else:
-            #         print('NOT ok kayo')
-            #     break
 
             key = cv2.waitKey(1) & 0xFF
             if key == ord('z'):
